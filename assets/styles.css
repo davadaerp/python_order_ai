@@ -1,0 +1,10 @@
+
+.custom-grid .ag-header-cell-label {
+    justify-content: center;  /* 컬럼 헤더의 텍스트 중앙 정렬 */
+    text-align: center;       /* 텍스트 가운데 정렬 */
+}
+
+.ag-header-cell.group-header-blue {
+    background-color: blue !important;
+    color: white !important;
+}
