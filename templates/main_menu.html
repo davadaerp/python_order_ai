@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>통계 선택</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f2f2f2;
+            padding: 10px 20px;
+            border-bottom: 1px solid #ccc;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+        }
+        .menu {
+            display: flex;
+            gap: 20px;
+        }
+        .menu a {
+            text-decoration: none;
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .logout {
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            color: red;
+            margin-right: 40px; /* 오른쪽 여백 추가 */
+        }
+    </style>
+
+    <script>
+        function navigateToMainContent() {
+            // contentFrame에 '/main_content' 페이지를 로드
+            parent.document.getElementById("contentFrame").src = "/main_content";
+        }
+
+        function logout() {
+            let confirmLogout = confirm("로그아웃하시겠습니까?");
+            if (confirmLogout) {
+                alert("로그아웃되었습니다.");
+                window.top.location.href = '/';  // 최상위 창을 로그인 화면으로 이동
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="navigateToMainContent()">다바다</div>
+        <div class="menu">
+            <a href="/statitics_main" target="contentFrame">통계분석</a>
+            <a href="/order_listview" target="contentFrame">통계주문목록</a>
+            <a href="/product_main" target="contentFrame">품목관리</a>
+            <a href="/retailshop_main" target="contentFrame">거래처관리</a>
+            <a href="/order_parsing" target="contentFrame">문자열테스트</a>
+        </div>
+        <div class="logout" onclick="logout()">로그아웃</div>
+    </div>
+</body>
+</html>

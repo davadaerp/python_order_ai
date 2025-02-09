@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문 통계</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .filter-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .filter-group {
+            display: inline-block;
+            margin-right: 15px;
+        }
+        .filter-group label {
+            font-weight: bold;
+            color: #555;
+            margin-right: 8px;
+        }
+        .filter-group select, .filter-group input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .filter-group button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        .filter-group button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .popup-button {
+            color: blue;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        #popupItem {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            z-index: 1000;
+            max-width: 80%;
+            max-height: 80%;
+            overflow: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        #popupItem-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        .popup-content {
+            max-width: 100%;
+            overflow: auto;
+        }
+        .popup-content button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .popup-content button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // 분석통계목록 조건조회
+        function updateListView() {
+            const year = document.getElementById('year').value;
+            const month = document.getElementById('month').value;
+            const business_type = document.getElementById('business_type').value;
+            const region = document.getElementById('region').value;
+            const company_name = document.getElementById('company_name').value;
+
+            $.ajax({
+                url: "/order_listview/update",
+                method: "POST",
+                data: {
+                    year: year,
+                    month: month,
+                    business_type: business_type,
+                    region: region,
+                    company_name: company_name
+                },
+                success: function(response) {
+                    document.getElementById('year').value = response.selected_year;
+                    document.getElementById('month').value = response.selected_month;
+                    document.getElementById('business_type').value = response.selected_business_type;
+                    document.getElementById('region').value = response.selected_region;
+
+                    const tableBody = document.querySelector('table tbody');
+                    tableBody.innerHTML = '';
+
+                    if (Array.isArray(response.df_records) && response.df_records.length > 0) {
+                        response.df_records.forEach(row => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td class="text-center">${row.order_id || 'N/A'}</td>
+                                <td class="text-center">${row.order_date || 'N/A'}</td>
+                                <td>${row.company_name || 'N/A'}</td>
+                                <td class="text-center">${row.region || 'N/A'}</td>
+                                <td class="text-center">${row.business_type || 'N/A'}</td>
+                                <td class="text-right">₩${row.total_price ? row.total_price.toLocaleString() : '0'}</td>
+                                <td><span class="popup-button" onclick="openItemPopup(${row.order_id}, '${row.order_description || 'N/A'}')">${row.order_description || 'N/A'}</span></td>
+                                <td><span class="popup-button" onclick="openItemPopup(${row.order_id}, '${row.order_after || 'N/A'}')">${row.order_after || 'N/A'}</span></td>
+                                <td>
+                                    <button onclick="moveToLocation(${row.latitude || 0}, ${row.longitude || 0}, '${row.address ? row.address.replace(/'/g, "\\'") : 'N/A'}')">위치 이동</button>
+                                </td>
+                            `;
+                            tableBody.appendChild(tr);
+                        });
+                    } else {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = '<td colspan="9">데이터가 없습니다.</td>';
+                        tableBody.appendChild(tr);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX 요청 중 오류 발생:", error);
+                }
+            });
+        }
+
+        // 분석통계목록 상세품목목록
+        function openItemPopup(orderId) {
+            var overlay = document.getElementById('popupItem-overlay');
+            var popup = document.getElementById('popupItem');
+            var content = document.getElementById('popupItem-content');
+
+            overlay.style.display = 'block';
+            popup.style.display = 'block';
+            content.innerHTML = '<p>Loading...</p>';
+
+            fetch('/order_listview/get_order_items?order_id=' + orderId)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch order items.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    content.innerHTML = '<h3>품목 목록</h3>';
+                    if (data.items && data.items.length > 0) {
+                        let table = '<table><thead><tr>' +
+                                    '<th>순번</th><th>품목 코드</th><th>품목명</th><th>주종</th><th>단가</th><th>수량</th><th>금액</th>' +
+                                    '</tr></thead><tbody>';
+
+                        data.items.forEach((item, index) => {
+                            table += '<tr>' +
+                                     '<td>' + (index + 1) + '</td>' +
+                                     '<td>' + item.product_code + '</td>' +
+                                     '<td>' + item.product_name + '</td>' +
+                                     '<td>' + item.alcohol_type + '</td>' +
+                                     '<td>₩' + item.product_price.toLocaleString() + '</td>' +
+                                     '<td>' + item.quantity + '</td>' +
+                                     '<td>₩' + item.total_price.toLocaleString() + '</td>' +
+                                     '</tr>';
+                        });
+
+                        table += '</tbody></table>';
+                        content.innerHTML += table;
+                    } else {
+                        content.innerHTML += '<p>품목이 없습니다.</p>';
+                    }
+                    content.innerHTML += '<button onclick="closeItemPopup()">닫기</button>';
+                })
+                .catch(error => {
+                    content.innerHTML = '<p>Error loading items: ' + error.message + '</p>';
+                    content.innerHTML += '<button onclick="closeItemPopup()">닫기</button>';
+                });
+        }
+
+        function closeItemPopup() {
+            var overlay = document.getElementById('popupItem-overlay');
+            var popup = document.getElementById('popupItem');
+            overlay.style.display = 'none';
+            popup.style.display = 'none';
+        }
+
+        // Google Maps 위치 이동 함수
+        function moveToLocation(latitude, longitude, address) {
+            const googleMapsUrl = address
+            ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)} (${latitude},${longitude})`
+            : `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+
+            const popupOptions = 'width=1024,height=900,top=100,left=500,scrollbars=yes,resizable=yes';
+            window.open(googleMapsUrl, '_blank', popupOptions);
+        }
+
+        function handleEnterKey(event) {
+            if (event.key === 'Enter') {
+                updateListView();
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="filter-section">
+        <div class="filter-group">
+            <label for="year">년도:</label>
+            <select id="year" onchange="updateListView()">
+                <option value="전체">전체</option>
+                {% for year in year_list %}
+                    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="month">월:</label>
+            <select id="month" onchange="updateListView()">
+                <option value="전체">전체</option>
+                {% for month in month_list %}
+                    <option value="{{ month }}" {% if month == selected_month %}selected{% endif %}>{{ month }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="business_type">업종:</label>
+            <select id="business_type" onchange="updateListView()">
+                <option value="전체">전체</option>
+                {% for business_type in business_type_list %}
+                    <option value="{{ business_type }}" {% if business_type == selected_business_type %}selected{% endif %}>{{ business_type }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="region">지역:</label>
+            <select id="region" onchange="updateListView()">
+                <option value="전체">전체</option>
+                {% for region in region_list %}
+                    <option value="{{ region }}" {% if region == selected_region %}selected{% endif %}>{{ region }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="company_name">상호명:</label>
+            <input type="text" id="company_name" placeholder="상호명 검색" onkeydown="handleEnterKey(event)">
+        </div>
+        <div class="filter-group" style="vertical-align: middle;">
+            <button onclick="updateListView()">검색</button>
+        </div>
+    </div>
+
+    {% if df.empty %}
+        <p>선택한 조건에 해당하는 데이터가 없습니다.</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th class="text-center">주문 ID</th>
+                    <th class="text-center">주문 날짜</th>
+                    <th class="text-center">상호명</th>
+                    <th class="text-center">지역</th>
+                    <th class="text-center">업종</th>
+                    <th class="text-center">총 금액</th>
+                    <th class="text-center">주문 내용</th>
+                    <th class="text-center">변역 내용</th>
+                    <th class="text-center">위치 이동</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in df_records %}
+                <tr>
+                    <td class="text-center">{{ row['order_id'] }}</td>
+                    <td class="text-center">{{ row['order_date'] }}</td>
+                    <td>{{ row['company_name'] }}</td>
+                    <td class="text-center">{{ row['region'] }}</td>
+                    <td class="text-center">{{ row['business_type'] }}</td>
+                    <td class="text-right">₩{{ "{:,.0f}".format(row['total_price']) }}</td>
+                    <td><span class="popup-button" onclick="openItemPopup({{ row['order_id'] }})">{{ row['order_description']|replace('"', '\\') }}</span></td>
+                    <td><span class="popup-button" onclick="openItemPopup({{ row['order_id'] }})">{{ row['order_after'] }}</span></td>
+                    <td>
+                        <button onclick="moveToLocation({{ row['latitude'] }}, {{ row['longitude'] }}, '{{ row['address'] }}' )">위치 이동</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <!-- 상세품목팝업 -->
+    <div id="popupItem-overlay" onclick="closeItemPopup()"></div>
+    <div id="popupItem">
+        <div id="popupItem-content" class="popup-content"></div>
+    </div>
+</body>
+</html>

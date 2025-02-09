@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Retail Shop List</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .filter-container {
+            max-width: 900px;
+            margin: 0 auto 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            font-weight: bold;
+            color: #555;
+            margin-right: 10px;
+        }
+        select, input[type="text"] {
+            padding: 5px;
+            margin-right: 3px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            border-collapse: collapse;
+            background-color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        thead {
+            background-color: #007bff;
+            color: white;
+        }
+        tbody tr:nth-child(odd) {
+            background-color: #f2f2f2;
+        }
+        tbody tr:hover {
+            background-color: #cce5ff;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        function search() {
+            const busi_r_no = '119-13-89653';
+            const ordr_busi_r_no = '';
+            const business_category = document.getElementById('business_category').value;
+            const business_type = document.getElementById('business_type').value;
+            const business_detail = document.getElementById('business_detail').value;
+            const srch_text = document.getElementById('srch_text').value;
+
+            const url = `http://192.168.45.102:8090/davadaApi/python/retailShopList?busi_r_no=${busi_r_no}&ordr_busi_r_no=${ordr_busi_r_no}&business_category=${business_category}&business_type=${business_type}&business_detail=${business_detail}&srch_text=${srch_text}`;
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(response) {
+                    const tbody = document.querySelector('#resultTable tbody');
+                    tbody.innerHTML = '';
+
+                    if (response.result === "SUCCESS" && response.data.length > 0) {
+                        response.data.forEach((item, index) => {
+                            const row = `<tr onclick="showRetailShopDetails('${item.BUSI_R_NO}', '${item.ORDR_BUSI_R_NO}')">
+                                <td>${index + 1}</td>
+                                <td>${item.ORDR_BUSI_R_NO}</td>
+                                <td>${item.ENTPRS_NAME_HANGUL}</td>
+                                <td>${item.COMM_NAME}</td>
+                                 <td>${item.SIGUNGU}</td>
+                                <td>${item.BUSINESS_CATEGORY}</td>
+                                <td>${item.BUSINESS_TYPE}</td>
+                                <td>${item.BUSINESS_DETAIL}</td>
+                                <td>${item.REPRS_NAME}</td>
+                            </tr>`;
+                            tbody.innerHTML += row;
+                        });
+                        // 첫 번째 데이터 자동 선택
+                        const firstItem = response.data[0];
+                        showRetailShopDetails(firstItem.BUSI_R_NO, firstItem.ORDR_BUSI_R_NO);
+                    } else {
+                        alert('검색 결과가 없습니다.');
+                        showRetailShopDetails("0", "0");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('검색 중 오류가 발생했습니다.');
+                    showRetailShopDetails("0", "0");
+                }
+            });
+        }
+
+        function showRetailShopDetails(busi_r_no, ordr_busi_r_no) {
+            window.parent.showRetailShopDetails(busi_r_no, ordr_busi_r_no);
+        }
+
+        $(document).ready(function() {
+            search();
+        });
+    </script>
+</head>
+<body>
+    <h1>거래처 목록</h1>
+    <div class="filter-container">
+        <label for="business_category">업태:</label>
+        <select id="business_category">
+            <option value="">선택안함</option>
+            <option value="음식점">음식점</option>
+            <option value="주점">주점</option>
+            <option value="호텔">호텔</option>
+        </select>
+
+        <label for="business_type">업종:</label>
+        <select id="business_type">
+            <option value="">선택안함</option>
+            <option value="한식">한식</option>
+            <option value="중식">중식</option>
+            <option value="양식">양식</option>
+            <option value="일식">일식</option>
+            <option value="기타">기타</option>
+        </select>
+
+        <label for="business_detail">업종상세:</label>
+        <select id="business_detail">
+            <option value="">선택안함</option>
+            <option value="고기">고기</option>
+            <option value="부페">부페</option>
+            <option value="장어">장어</option>
+            <option value="수산">수산</option>
+            <option value="기타">기타</option>
+        </select>
+        <label for="region">지역:</label>
+        <select id="region">
+            <option value="">선택안함</option>
+            <option value="서울">서울</option>
+            <option value="경기">경기</option>
+            <option value="인천">인천</option>
+            <option value="제주">제주</option>
+        </select>
+
+        <label for="srch_text">검색어:</label>
+        <input type="text" id="srch_text" placeholder="검색어 입력">
+
+        <button onclick="search()">검색</button>
+    </div>
+    <table id="resultTable">
+        <thead>
+            <tr>
+                <th>순번</th>
+                <th>업체코드</th>
+                <th>상호명</th>
+                <th>지역</th>
+                <th>시군구</th>
+                <th>업태</th>
+                <th>업종</th>
+                <th>업종상세</th>
+                <th>대표자명</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</body>
+</html>

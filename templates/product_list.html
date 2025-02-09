@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 7px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .search-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .search-form select, .search-form input, .search-form button {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .search-form button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .search-form button:hover {
+            background-color: #0056b3;
+        }
+        .total-count {
+            font-size: 15px;
+            font-weight: bold;
+            margin-left: auto;
+            padding-right: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        table th:hover {
+            background-color: #f1f1f1;
+        }
+        table tr:nth-child(odd) {
+            background-color: #f9f9f9; /* 홀수 행 배경색 */
+        }
+        table tr:nth-child(even) {
+            background-color: #e9e9e9; /* 짝수 행 배경색 */
+        }
+        table tr:hover {
+            background-color: #d9d9d9; /* 마우스 호버 시 배경색 */
+        }
+        .center-align {
+            text-align: center;
+        }
+        .right-align {
+            text-align: right;
+        }
+        .sortable {
+            position: relative;
+        }
+        .sortable::after {
+            content: '▼';
+            position: absolute;
+            right: 10px;
+            opacity: 0.5;
+        }
+        .sortable.asc::after {
+            content: '▲';
+        }
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pagination button {
+            padding: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        .pagination button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+
+    <script>
+        function showProductDetails(product_id) {
+            window.parent.showProductDetails(product_id);
+        }
+
+        function searchProducts() {
+            document.querySelector('.search-form').submit();
+        }
+
+        function sortTable(column, key) {
+            let table = document.querySelector("table tbody");
+            let rows = Array.from(table.querySelectorAll("tr"));
+            let isAsc = sessionStorage.getItem("sort_" + key) === "asc";
+
+            rows.sort((a, b) => {
+                let aValue = a.children[column].textContent.trim();
+                let bValue = b.children[column].textContent.trim();
+
+                if (!isNaN(aValue) && !isNaN(bValue)) {
+                    aValue = Number(aValue);
+                    bValue = Number(bValue);
+                }
+
+                return isAsc ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1);
+            });
+
+            sessionStorage.setItem("sort_" + key, isAsc ? "desc" : "asc");
+
+            table.innerHTML = "";
+            rows.forEach(row => table.appendChild(row));
+
+            document.querySelectorAll(".sortable").forEach(th => th.classList.remove("asc", "desc"));
+            let header = document.getElementById("sort-" + key);
+            header.classList.add(isAsc ? "desc" : "asc");
+        }
+
+        let currentPage = 1;
+        const rowsPerPage = 20;
+
+        function showPage(page) {
+            const rows = document.querySelectorAll("table tbody tr");
+            const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+
+            currentPage = page;
+            sessionStorage.setItem("currentPage", page);
+
+            rows.forEach((row, index) => {
+                row.style.display = (index >= (page - 1) * rowsPerPage && index < page * rowsPerPage) ? "table-row" : "none";
+
+                // 순번 갱신: 현재 페이지의 순번을 계산하도록 수정
+                let page_seq = index + (page - 1)  + 1;
+                if (row.style.display !== "none") {
+                    let pageSeq = row.querySelector("#page-seq");
+                    pageSeq.textContent = page_seq;
+                }
+            });
+
+            document.getElementById("page-info").textContent = `Page ${page} of ${totalPages}`;
+
+            // 현재 페이지의 첫 번째 제품 자동 클릭
+            const visibleRows = Array.from(rows).filter(row => row.style.display !== "none");
+            if (visibleRows.length > 0) {
+                visibleRows[0].click();
+            } else {
+                showProductDetails(0);
+            }
+        }
+
+        function changePage(step) {
+            showPage(currentPage + step);
+        }
+
+        window.onload = function() {
+            // 페이지 로드 후 순번을 동적으로 설정
+            const rows = document.querySelectorAll("table tbody tr");
+            rows.forEach((row, index) => {
+                row.querySelector("td.center-align").textContent = index + 1;
+            });
+
+            // 총 건수 표시
+            const totalCountElement = document.getElementById("total-count");
+            totalCountElement.textContent = `총 건수: ${rows.length}개`;
+
+            if (!sessionStorage.getItem("searched")) {
+                document.querySelector('.search-form').submit();
+                sessionStorage.setItem("searched", "true");
+            }
+            const savedPage = sessionStorage.getItem("currentPage");
+            showPage(savedPage ? parseInt(savedPage) : 1);
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>상품 검색</h1>
+        <form class="search-form" action="/product/search" method="GET">
+            <select name="alcohol_type" id="alcohol_type">
+                <option value="">전체</option>
+                <option value="소주" {% if alcohol_type == '소주' %}selected{% endif %}>소주</option>
+                <option value="맥주" {% if alcohol_type == '맥주' %}selected{% endif %}>맥주</option>
+                <option value="수입맥주" {% if alcohol_type == '수입맥주' %}selected{% endif %}>수입맥주</option>
+                <option value="생맥주" {% if alcohol_type == '생맥주' %}selected{% endif %}>생맥주</option>
+                <option value="양주" {% if alcohol_type == '양주' %}selected{% endif %}>양주</option>
+                <option value="청주" {% if alcohol_type == '청주' %}selected{% endif %}>청주</option>
+                <option value="사케" {% if alcohol_type == '사케' %}selected{% endif %}>사케</option>
+                <option value="과일주" {% if alcohol_type == '과일주' %}selected{% endif %}>과일주</option>
+                <option value="와인" {% if alcohol_type == '와인' %}selected{% endif %}>와인</option>
+                <option value="전통주" {% if alcohol_type == '전통주' %}selected{% endif %}>전통주</option>
+                <option value="기타" {% if alcohol_type == '기타' %}selected{% endif %}>기타</option>
+            </select>
+            <input type="text" name="product_name" id="product_name" placeholder="상품명 입력" value="{{product_name}}">
+            <button type="submit">검색</button>
+            <span id="total-count" class="total-count"></span>
+        </form>
+        <table>
+            <thead>
+                <tr>
+                    <th class="center-align">순번</th>
+                    <th class="center-align">상품코드</th>
+                    <th id="sort-name" class="sortable" onclick="sortTable(1, 'name')">상품명</th>
+                    <th id="sort-type" class="sortable center-align" onclick="sortTable(2, 'type')">주종</th>
+                    <th class="center-align">개수</th>
+                    <th class="right-align">상품단가</th>
+                    <th class="right-align">금액</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr onclick="showProductDetails('{{ product['id'] }}')">
+                        <td class="center-align" id="page-seq">1</td>
+                        <td class="center-align">{{ product['product_code'] }}</td>
+                        <td>{{ product['product_name'] }}</td>
+                        <td class="center-align">{{ product['alcohol_type'] }}</td>
+                        <td class="center-align">{{ product['quantity_per_box'] }}</td>
+                        <td class="right-align">{{ product['product_price'] }}</td>
+                        <td class="right-align">{{ product['product_amount'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="pagination">
+            <button onclick="changePage(-1)">이전</button>
+            <span id="page-info"></span>
+            <button onclick="changePage(1)">다음</button>
+        </div>
+    </div>
+</body>
+</html>

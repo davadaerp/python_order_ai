@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>로그인</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Aligns the content to the top */
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding-top: 15%; /* Moves the content 20% lower */
+        }
+        h2 {
+            margin-bottom: 20px;
+        }
+        form {
+            text-align: left;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        label {
+            display: inline-block;
+            width: 50px; /* 라벨의 고정된 너비 */
+            text-align: right; /* 우측 정렬 */
+            margin-right: 10px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 200px;
+            padding: 8px;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto; /* Centers the button horizontally */
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>분석로그인</h2>
+    <form method="POST">
+        <label for="username">ID:</label>
+        <input type="text" name="username" required>
+        <br><br>
+        <label for="password">PSWD:</label>
+        <input type="password" name="password" required>
+        <br><br>
+        <button type="submit">로그인</button>
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+    </form>
+</body>
+</html>

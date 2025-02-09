@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript">
+        function showRetailShopDetails(busi_r_no,ordr_busi_r_no) {
+            if (!ordr_busi_r_no || ordr_busi_r_no.trim() === "") {
+                ordr_busi_r_no = 0;
+            }
+            //alert('ordr_busi_r_no: ' + ordr_busi_r_no);
+            window.frames['right_frame'].location.href = "/retailshop_detail/get/" + busi_r_no + "/" + ordr_busi_r_no;
+        }
+
+        function searchRetailShops() {
+            window.frames['left_frame'].search();
+        }
+    </script>
+</head>
+<frameset cols="55%, 45%" frameborder="1" border="2">
+    <frame src="/retailshop_list" name="left_frame" scrolling="no"  frameborder="1">
+    <frame src="/retailshop_detail" name="right_frame" frameborder="1">
+</frameset>
+</html>

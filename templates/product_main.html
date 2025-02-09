@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript">
+        function showProductDetails(product_id) {
+            if (!product_id || product_id.trim() === "") {
+                product_id = 0;
+            }
+            //alert('product_id: ' + product_id);
+            window.frames['right_frame'].location.href = "/product_detail/get/" + product_id;
+        }
+
+        function searchProducts() {
+            window.frames['left_frame'].searchProducts();
+        }
+    </script>
+</head>
+<frameset cols="45%, 55%" frameborder="1" border="2">
+    <frame src="/product_list" name="left_frame" scrolling="no"  frameborder="1">
+    <frame src="/product_detail" name="right_frame" frameborder="1">
+</frameset>
+</html>

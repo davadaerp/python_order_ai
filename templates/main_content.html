@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>동적으로 움직이는 글자</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff; /* 배경을 흰색으로 설정 */
+            overflow: hidden;
+        }
+        .moving-text {
+            font-size: 3rem;
+            font-weight: bold;
+            position: absolute;
+            white-space: nowrap;
+            animation: moveText 5s linear infinite;
+        }
+        @keyframes moveText {
+            0% {
+                left: 100%;
+            }
+            50% {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            100% {
+                left: -100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="moving-text">안녕하세요. 다바다입니다.</div>
+</body>
+</html>

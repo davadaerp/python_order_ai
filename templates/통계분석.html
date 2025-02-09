@@ -1,0 +1,67 @@
+<html>
+    <head>
+        <title>Sales Statistics</title>
+        <!-- JQuery 추가 -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            //
+            function updateStatistics() {
+                const chartType = document.getElementById('chart_type').value;
+                const year = document.getElementById('year').value;
+                const month = document.getElementById('month').value;
+
+                $.ajax({
+                    url: "/order/update",
+                    method: "POST",
+                    data: {
+                        chart_type: chartType,
+                        year: year,
+                        month: month
+                    },
+                    success: function(response) {
+                        document.getElementById("region_chart").src = "data:image/png;base64," + response.region_chart;
+                        document.getElementById("business_type_chart").src = "data:image/png;base64," + response.business_type_chart;
+                        document.getElementById("alcoholic_chart").src = "data:image/png;base64," + response.alcoholic_chart;
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX 요청 중 오류 발생:", error);
+                    }
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <h1>분석목록</h1>
+        <form method="post">
+            <label for="chart_type">차트 유형:</label>
+            <select name="chart_type" id="chart_type" onchange="updateStatistics()">
+                <option value="pie" {% if chart_type == 'pie' %}selected{% endif %}>파이 차트</option>
+                <option value="bar" {% if chart_type == 'bar' %}selected{% endif %}>막대 차트</option>
+                <option value="trend" {% if chart_type == 'trend' %}selected{% endif %}>추세 차트</option>
+            </select>
+
+            <label for="year">년도:</label>
+            <select name="year" id="year" onchange="updateStatistics()">
+                {% for year in year_list %}
+                    <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="month">월:</label>
+            <select name="month" id="month" onchange="updateStatistics()">
+                {% for month in month_list %}
+                    <option value="{{ month }}" {% if selected_month == month %}selected{% endif %}>{{ month }}</option>
+                {% endfor %}
+            </select>
+        </form>
+
+        <div id="charts">
+            <!--
+            <h2>지역별 판매 분포</h2>
+            -->
+            <img id="region_chart" src="data:image/png;base64,{{ region_chart }}" />
+            <img id="business_type_chart" src="data:image/png;base64,{{ business_type_chart }}" />
+            <img id="alcoholic_chart" src="data:image/png;base64,{{ alcoholic_chart }}" />
+        </div>
+    </body>
+    </html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript">
+        // JavaScript functions remain unchanged
+        function clearFormFields() {
+            document.getElementById("product_code").value = "";
+            document.getElementById("product_name").value = "";
+            document.getElementById("alcohol_type").selectedIndex = 0;
+            document.getElementById("unit").selectedIndex = 0;
+            document.getElementById("quantity_per_box").value = "1";
+            document.getElementById("product_price").value = "0";
+            document.getElementById("product_amount").value = "0";
+            document.getElementById("product_nickname").value = "";
+        }
+
+        function formatPrice() {
+            var price = document.getElementById("product_price").value.replace(/,/g, '');
+            if (price === "") return;
+            price = parseInt(price, 10).toLocaleString();
+            document.getElementById("product_price").value = price;
+        }
+
+        function formatPriceInput() {
+            var price = document.getElementById("product_price").value.replace(/,/g, '');
+            price = price.replace(/[^\d]/g, '');
+            document.getElementById("product_price").value = price;
+        }
+
+        function addNewProduct() {
+            clearFormFields();
+            document.getElementById("addNewButton").style.display = "none";
+            document.getElementById("registerButton").style.display = "inline-block";
+            document.getElementById("editButton").style.display = "none";
+            document.getElementById("deleteButton").style.display = "none";
+        }
+
+        function validateForm() {
+            const product_name = document.getElementById("product_name").value.trim();
+            const quantity_per_box = document.getElementById("quantity_per_box").value.trim();
+            const product_price = document.getElementById("product_price").value.trim();
+
+            if (!product_name) {
+                alert("상품명은 필수 입력입니다.");
+                return false;
+            }
+
+            if (!quantity_per_box || isNaN(quantity_per_box) || parseInt(quantity_per_box) <= 0) {
+                alert("개수는 필수 입력이며, 0보다 커야 합니다.");
+                return false;
+            }
+
+            if (!product_price || parseInt(product_price.replace(/,/g, '')) <= 0) {
+                alert("상품단가는 필수 입력이며, 0보다 커야 합니다.");
+                return false;
+            }
+
+            return true;
+        }
+
+        function registerProduct() {
+            if (!validateForm()) return;
+            const formData = new FormData(document.getElementById("productForm"));
+            fetch("/product_detail/add", {
+                method: "POST",
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    document.getElementById("product_id").value = data.product_id;
+                    document.getElementById("product_code").value = data.product_code;
+                    document.getElementById("addNewButton").style.display = "inline-block";
+                    document.getElementById("registerButton").style.display = "none";
+                    document.getElementById("editButton").style.display = "inline-block";
+                    document.getElementById("deleteButton").style.display = "inline-block";
+                } else {
+                    alert("Error: Something went wrong.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Error occurred while registering the product.");
+            });
+        }
+
+        function editProduct() {
+            var product_id = document.getElementById("product_id").value;
+            if (!product_id) {
+                alert("상품ID가 필요합니다.");
+                return;
+            }
+            if (!validateForm()) return;
+            var formData = new FormData(document.getElementById("productForm"));
+            formData.append('product_id', product_id);
+            if (confirm("정말 수정하시겠습니까?")) {
+                fetch("/product_detail/edit/" + product_id, {
+                    method: "PUT",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                    } else {
+                        alert("Error: Something went wrong.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Error occurred while editing the product.");
+                });
+            }
+        }
+
+        function deleteProduct() {
+            var product_id = document.getElementById("product_id").value;
+            if (!product_id) {
+                alert("상품ID가 필요합니다.");
+                return;
+            }
+            if (confirm("정말 삭제하시겠습니까?")) {
+                fetch("/product_detail/delete/" + product_id, {
+                    method: "DELETE",
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        window.parent.searchProducts();
+                    } else {
+                        alert("Error: Something went wrong.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Error occurred while deleting the product.");
+                });
+            }
+        }
+
+        function resetForm() {
+            clearFormFields();
+        }
+
+        function initForm() {
+            var productExists = {{ 'true' if product else 'false' }};
+            if (productExists) {
+                document.getElementById("registerButton").style.display = "none";
+            } else {
+                document.getElementById("addNewButton").style.display = "none";
+                document.getElementById("editButton").style.display = "none";
+                document.getElementById("deleteButton").style.display = "none";
+                clearFormFields();
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #productForm {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            width: 120px;
+            font-weight: bold;
+            color: #555;
+        }
+        .form-group input, .form-group select {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .form-group textarea {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            height: 100px;
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .buttons button {
+            width: 13%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .buttons button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body onload="initForm()">
+    <h1>상품상세현황</h1>
+    <form id="productForm">
+        <input type="hidden" id="product_id" name="product_id" value="{{ product['id'] if product else '' }}" />
+        <div class="form-group">
+            <label for="product_code">상품코드</label>
+            <input type="text" id="product_code" name="product_code" value="{{ product['product_code'] }}" maxlength="20" size="10" disabled />
+        </div>
+        <div class="form-group">
+            <label for="product_name">상품명</label>
+            <input type="text" id="product_name" name="product_name" value="{{ product['product_name'] }}" maxlength="50" size="50" />
+        </div>
+        <div class="form-group">
+            <label for="alcohol_type">주종</label>
+            <select id="alcohol_type" name="alcohol_type">
+                <option value="소주" {% if product['alcohol_type'] == '소주' %}selected{% endif %}>소주</option>
+                <option value="맥주" {% if product['alcohol_type'] == '맥주' %}selected{% endif %}>맥주</option>
+                <option value="수입맥주" {% if product['alcohol_type'] == '수입맥주' %}selected{% endif %}>수입맥주</option>
+                <option value="생맥주" {% if product['alcohol_type'] == '생맥주' %}selected{% endif %}>생맥주</option>
+                <option value="양주" {% if product['alcohol_type'] == '양주' %}selected{% endif %}>양주</option>
+                <option value="청주" {% if product['alcohol_type'] == '청주' %}selected{% endif %}>청주</option>
+                <option value="사케" {% if product['alcohol_type'] == '사케' %}selected{% endif %}>사케</option>
+                <option value="과일주" {% if product['alcohol_type'] == '과일주' %}selected{% endif %}>과일주</option>
+                <option value="와인" {% if product['alcohol_type'] == '와인' %}selected{% endif %}>와인</option>
+                <option value="전통주" {% if product['alcohol_type'] == '전통주' %}selected{% endif %}>전통주</option>
+                <option value="기타" {% if product['alcohol_type'] == '기타' %}selected{% endif %}>기타</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="unit">단위</label>
+            <select id="unit" name="unit">
+                <option value="box">박스</option>
+                <option value="individual">개</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="quantity_per_box">박스당 개수</label>
+            <input type="number" id="quantity_per_box" name="quantity_per_box" value="{{ product['quantity_per_box'] }}" maxlength="3" size="5" style="text-align: right;"/>
+        </div>
+        <div class="form-group">
+            <label for="product_price">상품단가</label>
+            <input type="text" id="product_price" name="product_price" value="{{ product['product_price'] }}" maxlength="20" size="20" onblur="formatPrice()" oninput="formatPriceInput()" style="text-align: right;" />
+        </div>
+        <div class="form-group">
+            <label for="product_amount">금액</label>
+            <input type="number" id="product_amount" name="product_amount" value="{{ product['product_amount'] }}" maxlength="20" size="20" />
+        </div>
+        <div class="form-group">
+            <label for="product_nickname">상품별명</label>
+            <textarea id="product_nickname" name="product_nickname" maxlength="1000" rows="4">{{ product['product_nickname'] }}</textarea>
+        </div>
+        {% if message %}
+            <p class="message">{{ message }}</p>
+        {% endif %}
+        <div class="buttons">
+            <button type="button" id="addNewButton" onclick="addNewProduct()">추가</button>
+            <button type="button" id="registerButton" onclick="registerProduct()">등록</button>
+            <button type="button" id="editButton" onclick="editProduct()">수정</button>
+            <button type="button" id="deleteButton" onclick="deleteProduct()">삭제</button>
+        </div>
+    </form>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .tab {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 0;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background: #f1f1f1;
+            transition: background 0.3s, color 0.3s;
+        }
+        .tab.active {
+            background-color: #4CAF50; /* 선택된 탭의 배경색 */
+            color: white; /* 글씨 색상 */
+            font-weight: bold; /* 글씨 강조 */
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .frame-container {
+            display: flex;
+            width: 100%;
+            height: 1200px;
+        }
+        .frame {
+            flex: 1;
+            border: 1px solid #ccc;
+        }
+    </style>
+    <script type="text/javascript">
+        function showTab(tabName) {
+            let tabs = document.getElementsByClassName('tab');
+            for (let tab of tabs) {
+                tab.classList.remove('active');
+            }
+
+            let contents = document.getElementsByClassName('tab-content');
+            for (let content of contents) {
+                content.classList.remove('active');
+            }
+
+            // 클릭된 탭 활성화
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+    </script>
+</head>
+<body>
+    <div>
+        <span class="tab active" onclick="showTab('region_analysis')">지역분석</span>
+        <span class="tab" onclick="showTab('alcohol_analysis')">주종분석</span>
+        <span class="tab" onclick="showTab('business_analysis')">업종분석</span>
+        <span class="tab" onclick="showTab('month_analysis')">그리드분석</span>
+        <span class="tab" onclick="showTab('etc')">그리드테스트</span>
+    </div>
+
+    <div id="region_analysis" class="tab-content active">
+        <div class="frame-container">
+            <iframe src="/order" class="frame" name="left_frame" scrolling="yes"></iframe>
+        </div>
+    </div>
+
+    <div id="alcohol_analysis" class="tab-content">
+        <div class="frame-container">
+            <iframe src="/order_listview" class="frame" name="left_frame" scrolling="yes"></iframe>
+        </div>
+    </div>
+
+    <div id="business_analysis" class="tab-content">
+        <div class="frame-container">
+            <iframe src="/order" class="frame" name="left_frame" scrolling="yes"></iframe>
+        </div>
+    </div>
+
+    <div id="month_analysis" class="tab-content">
+        <div class="frame-container">
+            <iframe src="/statics_grid" class="frame" name="left_frame" scrolling="yes"></iframe>
+        </div>
+    </div>
+
+    <div id="etc" class="tab-content">
+        <div class="frame-container">
+            <iframe src="/grid_test" class="frame" name="left_frame" scrolling="yes"></iframe>
+        </div>
+    </div>
+</body>
+</html>

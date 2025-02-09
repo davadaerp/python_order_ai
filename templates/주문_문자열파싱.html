@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJAX 검색</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+        }
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            width: 33%; /* 1/3 width */
+            margin-top: 10%; /* 30% from the top */
+        }
+        .search-box input {
+            flex-grow: 1;
+            padding: 5px;
+            width: 150%; /* Increase width by 20% */
+        }
+        .search-box button {
+            width: 100px; /* Fixed width */
+            padding: 5px;
+        }
+        #save-button {
+            background-color: blue;
+            color: white;
+        }
+        .result-box {
+            width: 50%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            min-height: 250px;
+            margin-top: 20px; /* Space between search box and result box */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="검색어 입력">
+            <button id="search-button">검색</button>
+            <button id="reset-button">초기화</button>
+            <button id="save-button">저장</button>
+        </div>
+        <div class="result-box" id="result-box">
+            <p>여기에 검색 결과가 표시됩니다.</p>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            let fetchedData = null;
+
+            // Handle search button click
+            $("#search-button").click(function() {
+                let order_text = $("#search-input").val().trim();
+                if (order_text === "") {
+                    alert("검색어를 입력해주세요.");
+                    return;
+                }
+
+                // AJAX request for search
+                $.ajax({
+                    url: "/order_parsing/search",  // Your backend API endpoint
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ keyword: order_text }), // Send JSON data
+                    success: function(response) {
+                        // Assuming response is in JSON format containing 'result' and 'data'
+                        if (response.result && response.data) {
+                            fetchedData = response.data;  // Store the data for later use
+
+                            // Display the result text in the result box
+                            let resultText = Array.isArray(response.result) ? response.result.join("\n") : response.result;
+                            let formattedResult = resultText.replace(/\n/g, '<br>');
+                            $("#result-box").html("<p>" + formattedResult + "</p>");
+                        } else {
+                            $("#result-box").html("<p>검색 결과가 없습니다.</p>");
+                        }
+                    },
+                    error: function() {
+                        $("#result-box").html("<p>검색 중 오류가 발생했습니다.</p>");
+                    }
+                });
+            });
+
+            // Handle reset button click
+            $("#reset-button").click(function() {
+                $("#search-input").val("");
+                $("#result-box").html("<p>여기에 검색 결과가 표시됩니다.</p>");
+                fetchedData = null;  // Clear stored data
+            });
+
+            // Handle save button click
+            $("#save-button").click(function() {
+                if (fetchedData === null || fetchedData.length === 0) {
+                    alert("저장할 데이터가 없습니다.");
+                    return;
+                }
+
+             // AJAX request to save the data on the server
+                $.ajax({
+                    url: "/order_parsing/save_data",  // Your backend API endpoint for saving data
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ data: fetchedData }),  // Send the fetched data as JSON
+                    success: function(response) {
+                        alert("데이터가 저장되었습니다.");
+                    },
+                    error: function() {
+                        alert("저장 중 오류가 발생했습니다.");
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
