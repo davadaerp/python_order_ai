@@ -75,58 +75,65 @@
         }
     </style>
     <script>
-        function search() {
-            const busi_r_no = '119-13-89653';
-            const ordr_busi_r_no = '';
-            const business_category = document.getElementById('business_category').value;
-            const business_type = document.getElementById('business_type').value;
-            const business_detail = document.getElementById('business_detail').value;
-            const srch_text = document.getElementById('srch_text').value;
-
-            const url = `http://192.168.45.102:8090/davadaApi/python/retailShopList?busi_r_no=${busi_r_no}&ordr_busi_r_no=${ordr_busi_r_no}&business_category=${business_category}&business_type=${business_type}&business_detail=${business_detail}&srch_text=${srch_text}`;
-
-            $.ajax({
-                url: url,
-                type: 'GET',
-                success: function(response) {
-                    const tbody = document.querySelector('#resultTable tbody');
-                    tbody.innerHTML = '';
-
-                    if (response.result === "SUCCESS" && response.data.length > 0) {
-                        response.data.forEach((item, index) => {
-                            const row = `<tr onclick="showRetailShopDetails('${item.BUSI_R_NO}', '${item.ORDR_BUSI_R_NO}')">
-                                <td>${index + 1}</td>
-                                <td>${item.ORDR_BUSI_R_NO}</td>
-                                <td>${item.ENTPRS_NAME_HANGUL}</td>
-                                <td>${item.COMM_NAME}</td>
-                                 <td>${item.SIGUNGU}</td>
-                                <td>${item.BUSINESS_CATEGORY}</td>
-                                <td>${item.BUSINESS_TYPE}</td>
-                                <td>${item.BUSINESS_DETAIL}</td>
-                                <td>${item.REPRS_NAME}</td>
-                            </tr>`;
-                            tbody.innerHTML += row;
-                        });
-                        // 첫 번째 데이터 자동 선택
-                        const firstItem = response.data[0];
-                        showRetailShopDetails(firstItem.BUSI_R_NO, firstItem.ORDR_BUSI_R_NO);
-                    } else {
-                        alert('검색 결과가 없습니다.');
-                        showRetailShopDetails("0", "0");
-                    }
-                },
-                error: function(xhr, status, error) {
-                    alert('검색 중 오류가 발생했습니다.');
-                    showRetailShopDetails("0", "0");
-                }
-            });
-        }
-
-        function showRetailShopDetails(busi_r_no, ordr_busi_r_no) {
+        // Make showRetailShopDetails globally accessible
+        window.showRetailShopDetails = function(busi_r_no, ordr_busi_r_no) {
             window.parent.showRetailShopDetails(busi_r_no, ordr_busi_r_no);
-        }
+        };
 
         $(document).ready(function() {
+            function search() {
+                const busi_r_no = '119-13-89653';
+                const ordr_busi_r_no = '';
+                const business_category = $('#business_category').val();
+                const business_type = $('#business_type').val();
+                const business_detail = $('#business_detail').val();
+                const srch_text = $('#srch_text').val();
+
+                const url = `http://www.davada.co.kr/davadaApi/python/retailShopList?busi_r_no=${busi_r_no}&ordr_busi_r_no=${ordr_busi_r_no}&business_category=${business_category}&business_type=${business_type}&business_detail=${business_detail}&srch_text=${srch_text}`;
+                //const url = "http://www.davada.co.kr/davadaApi/python/retailShopList?busi_r_no=119-13-89653";
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(response) {
+                        const tbody = $('#resultTable tbody');
+                        tbody.empty();
+
+                        if (response.result === "SUCCESS" && response.data.length > 0) {
+                            response.data.forEach((item, index) => {
+                                const row = `<tr onclick="showRetailShopDetails('${item.BUSI_R_NO}', '${item.ORDR_BUSI_R_NO}')">
+                                    <td>${index + 1}</td>
+                                    <td>${item.ORDR_BUSI_R_NO}</td>
+                                    <td>${item.ENTPRS_NAME_HANGUL}</td>
+                                    <td>${item.COMM_NAME}</td>
+                                    <td>${item.SIGUNGU}</td>
+                                    <td>${item.BUSINESS_CATEGORY}</td>
+                                    <td>${item.BUSINESS_TYPE}</td>
+                                    <td>${item.BUSINESS_DETAIL}</td>
+                                    <td>${item.REPRS_NAME}</td>
+                                </tr>`;
+                                tbody.append(row);
+                            });
+                            // 첫 번째 데이터 자동 선택
+                            const firstItem = response.data[0];
+                            showRetailShopDetails(firstItem.BUSI_R_NO, firstItem.ORDR_BUSI_R_NO);
+                        } else {
+                            alert('검색 결과가 없습니다.');
+                            showRetailShopDetails("0", "0");
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('검색 중 오류가 발생했습니다.');
+                        showRetailShopDetails("0", "0");
+                    }
+                });
+            }
+
+            // Bind search function to the button
+            $('button').click(function() {
+                search();
+            });
+
+            // Run search on page load
             search();
         });
     </script>
@@ -173,7 +180,7 @@
         <label for="srch_text">검색어:</label>
         <input type="text" id="srch_text" placeholder="검색어 입력">
 
-        <button onclick="search()">검색</button>
+        <button>검색</button>
     </div>
     <table id="resultTable">
         <thead>

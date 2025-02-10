@@ -199,20 +199,22 @@ def clean_and_parse(input_string):
     # 리스트를 공백으로 구분하여 하나의 문자열로 결합
     return ' '.join(result)
 
+
 # 주문 파싱 처리
 def process_order_parsing(row):
-    주문일자 = row['ordr_date']             # 주문일자
-    사업자번호 = row['busi_r_no']            # 사업자번호
-    업체코드 = row['ordr_busi_r_no']        # 업체코드
-    업체명 = row['entprs_name']            # 업체명
-    지역 = row['region']                  # 지역: 서울/경기/인천
-    지역상세 = row['sigungu']               # 시/군/구
-    업태 = row['business_category']          # 업태: business_category
-    업종 = row['business_type']          # 업종: business_type
-    업종상세 = row['business_detail']    # 업종상세: business_detail 고기,부폐,코드
-    주소 = row['addr1']                   # 주소
+    주문일자 = row['ORDR_DATE']             # 주문일자
+    사업자번호 = row['BUSI_R_NO']            # 사업자번호
+    업체코드 = row['ORDR_BUSI_R_NO']        # 업체코드
+    업체명 = row['ORDR_BUSI_R_NAME']       # 주문업체명
+    지역 = row['REGION']                  # 지역: 서울/경기/인천
+    지역상세 = row['SIGUNGU']               # 시/군/구
+    업태 = row['BUSINESS_CATEGORY']          # 업태: business_category
+    업종 = row['BUSINESS_TYPE']          # 업종: business_type
+    업종상세 = row['BUSINESS_DETAIL']    # 업종상세: business_detail 고기,부폐,코드
+    #주소 = row['addr1']                   # 주소
+    주소 = row['REGION']                   # 주소
     #
-    원주문내용 = row['orderContent']  # 원주문내용에 저장
+    원주문내용 = row['ORDR_DESCR']  # 원주문내용에 저장
     #
     parsing_result = []
     #
@@ -349,7 +351,7 @@ def process_orders_api_json():
     results = []
 
     # API 엔드포인트 URL
-    url = "http://127.0.0.1:5001/davada_orders_list"
+    url = "http://www.davada.co.kr/davadaApi/python/retailShopOrderList?busi_r_no=106-81-06669&srch_sdate=2025-02-05&srch_edate=2025-02-05"
 
     # GET 요청 보내기
     response = requests.get(url)
@@ -357,10 +359,15 @@ def process_orders_api_json():
     # 응답 상태 코드 확인
     if response.status_code == 200:
         # JSON 데이터 파싱
-        loaded_data = response.json()
+        loaded_json = response.json()
+
+        # 'data' 키의 값만 추출
+        extracted_data = loaded_json.get("data", [])
+
+        #print(json.dumps(extracted_data, ensure_ascii=False, indent=4))
 
         # 각 주문 데이터 처리
-        for row in loaded_data:
+        for row in extracted_data:
             # 0: 파싱DB처리목록, 1: parsing_result => 웹상출력할 목록
             result = process_order_parsing(row)
             results.append(result[0])

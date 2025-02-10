@@ -325,17 +325,5 @@ def order_parsing_save():
         return jsonify({"error": f"An error occurred while saving the data: {str(e)}"}), 500
 
 
-# 차후 다바다 웹서비스에서 호출시 삭제할 예정임.
-@app.route('/davada_orders_list', methods=['GET'])
-def davada_orders_list():
-    # 저장된 JSON 파일 읽기
-    with open("orders.json", "r", encoding="utf-8") as f:
-        loaded_data = json.load(f)
-
-    # 읽은 데이터를 출력
-    for order in loaded_data:
-        print(f"업체명: {order['entprs_name']}, 주문일자: {order['ordr_date']}, 주문내용: {order['orderContent']}")
-    return loaded_data
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
